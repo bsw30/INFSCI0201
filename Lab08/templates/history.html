@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>APOD History Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        #apod-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        #apod-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+        #date-input {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>View a Past Astronomy Picture of the Day</h1>
+
+    <!-- Date Input and Button to Fetch APOD -->
+    <div id="apod-container">
+        <form method="POST">
+            <label for="date-input">Select Date:</label>
+            <input type="date" id="date-input" name="date" min="1995-06-16" max="" required>
+            <button type="submit">Get APOD</button>
+        </form>
+    </div>
+
+    <div id="apod-container">
+        {% if apod_data %}
+            <p id="date">{{ apod_data.date }}</p>
+            <img id="apod-image" src="{{ apod_data.url }}" alt="Astronomy Picture of the Day">
+            <p id="description">{{ apod_data.explanation }}</p>
+            {% if apod_data.copyright %}
+                <p id="copyright">Copyright: {{ apod_data.copyright }}</p>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <a href="/">Go to Home Page</a>
+
+    <script>
+        document.getElementById('date-input').max = new Date().toISOString().split('T')[0];
+
+        const apiKey = 'gMzEXxheSX3XwHvBkCDK9qRYG6d4XMVcRhi31N8K';
+        const apiUrl = 'https://api.nasa.gov/planetary/apod';
+
+        async function fetchApodByDate() {
+            const selectedDate = document.getElementById('date-input').value;
+
+            if (!selectedDate) {
+                alert('Please select a valid date.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiUrl}?api_key=${apiKey}&date=${selectedDate}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Update HTML elements with the APOD data
+                document.getElementById('date').innerText = `Date: ${data.date}`;
+                document.getElementById('description').innerText = data.explanation;
+                document.getElementById('apod-image').src = data.url;
+                document.getElementById('apod-image').hidden = false;
+
+                // Check if copyright information is available
+                document.getElementById('copyright').innerText =
+                    data.copyright ? `Copyright: ${data.copyright}` : '';
+
+            } catch (error) {
+                console.error('Error fetching APOD:', error);
+                document.getElementById('description').innerText =
+                    'Sorry, there was an error fetching the Astronomy Picture of the Day for the selected date.';
+            }
+        }
+    </script>
+</body>
+</html>
